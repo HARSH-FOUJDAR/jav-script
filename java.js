@@ -1,72 +1,142 @@
+const questions = [
+  {
+    question: "Which is the largest animal in the world?",
+    answer: [
+      { text: "Snake", correct: false },
+      { text: "Blue Whale", correct: true },
+      { text: "Elephant", correct: false },
+      { text: "Cow", correct: false },
+    ]
+  },
+  {
+    question: "How many types of functions in JavaScript?",
+    answer: [
+      { text: "3", correct: true },
+      { text: "4", correct: false },
+      { text: "1", correct: false },
+      { text: "2", correct: false },
+    ]
+  },
+  {
+    question: "What is JavaScript extension?",
+    answer: [
+      { text: ".js", correct: true },
+      { text: ".java", correct: false },
+      { text: ".script", correct: false },
+      { text: "html", correct: false },
+    ]
+  },
+  {
+    question: "How many data types in JavaScript?",
+    answer: [
+      { text: "2", correct: false },
+      { text: "3", correct: false },
+      { text: "7", correct: true },   // ✅ correct
+      { text: "5", correct: false },
+    ]
+  }
+];
 
-let  userscore = 0;
-let compscore = 0; 
- 
-const  choices = document.querySelectorAll(".choice");   
-const meg =document.querySelector("#meg")
+const questionelement = document.getElementById("question");
+const answerButtons = document.getElementById("answer-button");
+const nextButton = document.getElementById("next-btn");
+const prevButton = document.getElementById("prev-btn");
 
-const userscorepara = document.querySelector("#user-score")
-const compscorepara = document.querySelector("#comp-score")
+let currentQuestionIndex = 0;
+let score = 0;
 
-const gencompchoice = ()=>{
-    const options = ["rock", "paper" ,"Secciors"];
-    const rndidx = Math.floor(Math.random() *3);
-    return options[rndidx];
+function startQuiz() {
+  currentQuestionIndex = 0;
+  score = 0;
+  nextButton.innerHTML = "Next";
+  showQuestion();
 }
-const drawgame = ()=>{
-    console.log("draw game ! ")
-     meg.innerText="Game was draw play again !"
-       meg.style.backgroundColor="#081b31"
+
+function showQuestion() {
+  resetState();
+  let currentQuestion = questions[currentQuestionIndex];
+  let questionNo = currentQuestionIndex + 1;
+  questionelement.innerHTML = questionNo + ". " + currentQuestion.question;
+
+  currentQuestion.answer.forEach(answer => {
+    const button = document.createElement("button");
+    button.innerHTML = answer.text;
+    button.classList.add("btn");
+    answerButtons.appendChild(button);
+
+    // ✅ Click Event
+    button.addEventListener("click", () => {
+      selectAnswer(button, answer.correct);
+    });
+  });
+
+  // Prev button hide on first question
+  prevButton.style.display = currentQuestionIndex === 0 ? "none" : "block";
 }
-const showinner =(userwin,userchoice,compchoice) =>{
-    if(userwin){
-        userscore++;
-        userscorepara.innerText = userscore;
-        meg.innerText="you are  a winner" ;
-        meg.style.backgroundColor="green"
-   }else{
-     compscore++;
-        compscorepara.innerText = compscore;
-    meg.innerText="you loss";
-     meg.style.backgroundColor="red"
-   }
+
+function resetState() {
+  nextButton.style.display = "none";
+  while (answerButtons.firstChild) {
+    answerButtons.removeChild(answerButtons.firstChild);
+  }
 }
 
-const playgame= (userchoice)=>{
-    console.log("user choice=", userchoice);
-    // generate computer chice //  
+function selectAnswer(selectedButton, correct) {
+  const allButtons = answerButtons.querySelectorAll("button");
 
-    const compchoice = gencompchoice();
-    console.log("comp choice=", compchoice);
+  // ✅ Disable all buttons after click
+  allButtons.forEach(btn => btn.disabled = true);
 
-    if(userchoice===compchoice){
-        drawgame();
+  if (correct) {
+    selectedButton.classList.add("correct");
+    score++;
+  } else {
+    selectedButton.classList.add("wrong");
+  }
+
+  // ✅ Show the correct answer (highlight green)
+  allButtons.forEach(btn => {
+    const answerObj = questions[currentQuestionIndex].answer.find(a => a.text === btn.innerText);
+    if (answerObj && answerObj.correct) {
+      btn.classList.add("correct");
     }
-else{
-    let userwin = true ;
-    if(userchoice==="rock"){
-        //sescior paper //
-        userwin ==="paper" ? false :true;
-    }
-    else if(userchoice ==="paper"){
-        //rock sessior //
-        userwin=compchoice ==="Secciors" ? false :true
-    }
-    else{
-        //rock paper
-         userwin = compchoice === "rock" ? false :true 
-    }
-   showinner(userwin , userchoice ,compchoice);
+  });
+
+  nextButton.style.display = "block";
 }
-};
-// first step //
 
- choices.forEach((choice)=>{
-choice.addEventListener("click",()=>{
-    const userchoice = choice.getAttribute("id")
-playgame(userchoice);
-})
+function showScore() {
+  resetState();
+  questionelement.innerHTML = `🎉 You scored ${score} out of ${questions.length}`;
+  nextButton.innerHTML = "Play Again";
+  nextButton.style.display = "block";
+  prevButton.style.display = "none";
+}
 
+function handleNextButton() {
+  currentQuestionIndex++;
+  if (currentQuestionIndex < questions.length) {
+    showQuestion();
+  } else {
+    showScore();
+  }
+}
 
-})
+function handlePrevButton() {
+  if (currentQuestionIndex > 0) {
+    currentQuestionIndex--;
+    showQuestion();
+  }
+}
 
+nextButton.addEventListener("click", () => {
+  if (currentQuestionIndex < questions.length) {
+    handleNextButton();
+  } else {
+    startQuiz();
+  }
+});
+
+prevButton.addEventListener("click", handlePrevButton);
+
+startQuiz();
